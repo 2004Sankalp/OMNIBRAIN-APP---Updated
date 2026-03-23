@@ -67,3 +67,20 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
     elif prediction == 4:
         st.error("💀 **Class 4: Critical Cardiovascular Disease**")
         st.write("Extreme risk. Critical vessel blockage indicated. Immediate emergency medical intervention required.")
+        # --- NEW GRAPH CODE STARTS HERE ---
+    st.divider()
+    st.subheader("📊 AI Confidence Breakdown")
+    st.write("This chart displays the model's calculated probability for each severity level.")
+    
+    # Get the raw mathematical probabilities from the Random Forest model
+    probabilities = model.predict_proba(input_data)[0]
+    
+    # Create a simple dataframe for the graph
+    prob_df = pd.DataFrame({
+        'Severity Level': ['Class 0 (Healthy)', 'Class 1 (Mild)', 'Class 2 (Moderate)', 'Class 3 (Severe)', 'Class 4 (Critical)'],
+        'Probability (%)': probabilities * 100
+    })
+    
+    # Display a native Streamlit bar chart
+    st.bar_chart(prob_df.set_index('Severity Level'), color="#ff4b4b")
+    # --- NEW GRAPH CODE ENDS HERE ---
