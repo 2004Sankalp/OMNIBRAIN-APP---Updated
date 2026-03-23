@@ -60,6 +60,20 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
     
     st.subheader("AI Diagnostic Assessment")
     
+    # --- VISUAL DANGER METER ---
+    # Convert the 0-4 scale into a percentage (0%, 25%, 50%, 75%, 100%)
+    danger_percentage = int((prediction / 4) * 100)
+    
+    st.write("### System Risk Level")
+    if prediction == 0:
+        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (Safe)")
+    elif prediction <= 2:
+        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (Elevated)")
+    else:
+        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (CRITICAL)")
+    
+    st.write("") # Quick spacing
+    
     # Multi-Class Output Mapping
     if prediction == 0:
         st.success("✅ **Class 0: Healthy Patient**")
@@ -77,6 +91,20 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
         st.error("💀 **Class 4: Critical Cardiovascular Disease**")
         st.write("Extreme risk. Critical vessel blockage indicated. Immediate emergency medical intervention required.")
         
+    # --- PATIENT PROFILE AREA CHART ---
+    st.divider()
+    st.subheader("📈 Vital Signs Deviation Analysis")
+    st.write("Visualizing how far the patient's vitals deviate from a healthy resting baseline.")
+    
+    # We normalize the data (divide by max healthy ranges) so they fit perfectly on one graph
+    chart_data = pd.DataFrame({
+        'Patient Vitals': [trestbps/120, chol/200, thalch/150],
+        'Healthy Baseline': [1.0, 1.0, 1.0] # 1.0 represents the perfect normal
+    }, index=['Blood Pressure', 'Cholesterol', 'Max Heart Rate'])
+    
+    # Display a beautiful overlapping area chart
+    st.area_chart(chart_data, color=["#ff4b4b", "#00cc66"])
+
     # --- PROBABILITY GRAPH ---
     st.divider()
     st.subheader("📊 AI Confidence Breakdown")
@@ -87,7 +115,7 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
     
     # Create a simple dataframe for the graph
     prob_df = pd.DataFrame({
-        'Severity Level': ['Class 0 (Healthy)', 'Class 1 (Mild)', 'Class 2 (Moderate)', 'Class 3 (Severe)', 'Class 4 (Critical)'],
+        'Severity Level': ['Class 0', 'Class 1', 'Class 2', 'Class 3', 'Class 4'],
         'Probability (%)': probabilities * 100
     })
     
