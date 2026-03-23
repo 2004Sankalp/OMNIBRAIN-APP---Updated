@@ -38,7 +38,19 @@ with col2:
     thal = st.selectbox("Thalassemia", ["normal", "fixed defect", "reversable defect"])
 
 st.divider()
-
+st.divider()
+    st.subheader("📊 Vitals vs. Healthy Baselines")
+    
+    # st.columns creates a beautiful row of dashboard widgets
+    met1, met2, met3 = st.columns(3)
+    
+    # .metric compares the patient's number to a normal baseline and draws an arrow
+    # delta_color="inverse" means higher numbers are bad (red arrow), lower are good (green arrow)
+    met1.metric(label="Cholesterol", value=f"{chol} mg/dl", delta=f"{chol - 200} from baseline", delta_color="inverse")
+    met2.metric(label="Resting BP", value=f"{trestbps} mmHg", delta=f"{trestbps - 120} from baseline", delta_color="inverse")
+    
+    # For heart rate during exercise, higher is usually better, so we use normal delta colors
+    met3.metric(label="Max Heart Rate", value=f"{thalch} bpm", delta=f"{thalch - 150} from baseline", delta_color="normal")
 # Prediction Logic
 if st.button("Analyze Patient Severity", type="primary", use_container_width=True):
     
