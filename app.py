@@ -39,6 +39,15 @@ with col2:
 
 st.divider()
 
+# --- VISUAL DASHBOARD ---
+st.subheader("📊 Vitals vs. Healthy Baselines")
+met1, met2, met3 = st.columns(3)
+met1.metric(label="Cholesterol", value=f"{chol} mg/dl", delta=f"{chol - 200} from baseline", delta_color="inverse")
+met2.metric(label="Resting BP", value=f"{trestbps} mmHg", delta=f"{trestbps - 120} from baseline", delta_color="inverse")
+met3.metric(label="Max Heart Rate", value=f"{thalch} bpm", delta=f"{thalch - 150} from baseline", delta_color="normal")
+
+st.divider()
+
 # Prediction Logic
 if st.button("Analyze Patient Severity", type="primary", use_container_width=True):
     
@@ -67,7 +76,8 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
     elif prediction == 4:
         st.error("💀 **Class 4: Critical Cardiovascular Disease**")
         st.write("Extreme risk. Critical vessel blockage indicated. Immediate emergency medical intervention required.")
-        # --- NEW GRAPH CODE STARTS HERE ---
+        
+    # --- PROBABILITY GRAPH ---
     st.divider()
     st.subheader("📊 AI Confidence Breakdown")
     st.write("This chart displays the model's calculated probability for each severity level.")
@@ -83,4 +93,13 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
     
     # Display a native Streamlit bar chart
     st.bar_chart(prob_df.set_index('Severity Level'), color="#ff4b4b")
-    # --- NEW GRAPH CODE ENDS HERE ---
+
+# --- MEDICAL GLOSSARY ---
+st.divider()
+with st.expander("ℹ️ Clinical Terminology Reference"):
+    st.markdown("""
+    * **Thallium Scan (thal):** A nuclear stress test. 'Reversable defect' indicates blood flow completely stops during exercise.
+    * **Fluoroscopy (ca):** The number of major coronary arteries (0-3) showing severe blockages under X-ray dye.
+    * **ST Depression (oldpeak):** How far the heartbeat wave drops below normal on an ECG after exercise. Drops > 2.0 indicate severe oxygen starvation.
+    * **ST Segment Slope:** The angle of the heartbeat wave during exercise. 'Downsloping' is a critical warning sign of narrowing arteries.
+    """)
