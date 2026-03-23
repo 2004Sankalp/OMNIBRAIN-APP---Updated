@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import plotly.graph_objects as go
+import plotly.express as px
 
-st.set_page_config(page_title="OMNIBRAIN AI Predictor", layout="centered")
+st.set_page_config(page_title="OMNIBRAIN AI Predictor", layout="wide") # Changed to 'wide' for bigger charts!
 
 @st.cache_resource
 def load_model():
@@ -17,7 +19,7 @@ st.divider()
 
 st.subheader("Patient Vitals Input")
 
-# Clean, text-based inputs matching the raw dataset
+# Clean, text-based inputs
 col1, col2 = st.columns(2)
 
 with col1:
@@ -39,88 +41,89 @@ with col2:
 
 st.divider()
 
-# --- VISUAL DASHBOARD ---
-st.subheader("📊 Vitals vs. Healthy Baselines")
-met1, met2, met3 = st.columns(3)
-met1.metric(label="Cholesterol", value=f"{chol} mg/dl", delta=f"{chol - 200} from baseline", delta_color="inverse")
-met2.metric(label="Resting BP", value=f"{trestbps} mmHg", delta=f"{trestbps - 120} from baseline", delta_color="inverse")
-met3.metric(label="Max Heart Rate", value=f"{thalch} bpm", delta=f"{thalch - 150} from baseline", delta_color="normal")
-
-st.divider()
-
 # Prediction Logic
 if st.button("Analyze Patient Severity", type="primary", use_container_width=True):
     
-    # Pack the user inputs into a dataframe exact matching the original column names
     input_data = pd.DataFrame([[age, sex, cp, trestbps, chol, fbs, restecg, thalch, exang, oldpeak, slope, ca, thal]], 
                               columns=['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalch', 'exang', 'oldpeak', 'slope', 'ca', 'thal'])
     
-    # Predict the severity class (0 to 4)
     prediction = model.predict(input_data)[0]
-    
-    st.subheader("AI Diagnostic Assessment")
-    
-    # --- VISUAL DANGER METER ---
-    # Convert the 0-4 scale into a percentage (0%, 25%, 50%, 75%, 100%)
-    danger_percentage = int((prediction / 4) * 100)
-    
-    st.write("### System Risk Level")
-    if prediction == 0:
-        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (Safe)")
-    elif prediction <= 2:
-        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (Elevated)")
-    else:
-        st.progress(danger_percentage, text=f"Overall Risk: {danger_percentage}% (CRITICAL)")
-    
-    st.write("") # Quick spacing
-    
-    # Multi-Class Output Mapping
-    if prediction == 0:
-        st.success("✅ **Class 0: Healthy Patient**")
-        st.write("No significant narrowing of coronary arteries detected. Low risk.")
-    elif prediction == 1:
-        st.warning("⚠️ **Class 1: Mild Coronary Artery Disease**")
-        st.write("Initial stages of vessel narrowing detected. Lifestyle changes and monitoring recommended.")
-    elif prediction == 2:
-        st.warning("🟠 **Class 2: Moderate Coronary Artery Disease**")
-        st.write("Moderate blockage present. Recommend scheduling an appointment with a cardiologist.")
-    elif prediction == 3:
-        st.error("🚨 **Class 3: Severe Coronary Artery Disease**")
-        st.write("High probability of severe vessel narrowing. Urgent medical consultation required.")
-    elif prediction == 4:
-        st.error("💀 **Class 4: Critical Cardiovascular Disease**")
-        st.write("Extreme risk. Critical vessel blockage indicated. Immediate emergency medical intervention required.")
-        
-    # --- PATIENT PROFILE AREA CHART ---
-    st.divider()
-    st.subheader("📈 Vital Signs Deviation Analysis")
-    st.write("Visualizing how far the patient's vitals deviate from a healthy resting baseline.")
-    
-    # We normalize the data (divide by max healthy ranges) so they fit perfectly on one graph
-    chart_data = pd.DataFrame({
-        'Patient Vitals': [trestbps/120, chol/200, thalch/150],
-        'Healthy Baseline': [1.0, 1.0, 1.0] # 1.0 represents the perfect normal
-    }, index=['Blood Pressure', 'Cholesterol', 'Max Heart Rate'])
-    
-    # Display a beautiful overlapping area chart
-    st.area_chart(chart_data, color=["#ff4b4b", "#00cc66"])
-
-    # --- PROBABILITY GRAPH ---
-    st.divider()
-    st.subheader("📊 AI Confidence Breakdown")
-    st.write("This chart displays the model's calculated probability for each severity level.")
-    
-    # Get the raw mathematical probabilities from the Random Forest model
     probabilities = model.predict_proba(input_data)[0]
+    danger_percentage = int((prediction / 4) * 100)
+
+    # --- TOP ROW: RESULTS & GAUGE CHART ---
+    res_col1, res_col2 = st.columns([1, 1])
     
-    # Create a simple dataframe for the graph
-    prob_df = pd.DataFrame({
-        'Severity Level': ['Class 0', 'Class 1', 'Class 2', 'Class 3', 'Class 4'],
-        'Probability (%)': probabilities * 100
-    })
-    
-    # Display a native Streamlit bar chart
-    st.bar_chart(prob_df.set_index('Severity Level'), color="#ff4b4b")
+    with res_col1:
+        st.subheader("AI Diagnostic Assessment")
+        if prediction == 0:
+            st.success("✅ **Class 0: Healthy Patient**\n\nNo significant narrowing of coronary arteries detected. Low risk.")
+            color = "green"
+        elif prediction == 1:
+            st.warning("⚠️ **Class 1: Mild CAD**\n\nInitial stages of vessel narrowing detected.")
+            color = "lightgreen"
+        elif prediction == 2:
+            st.warning("🟠 **Class 2: Moderate CAD**\n\nModerate blockage present. Recommend cardiology consult.")
+            color = "orange"
+        elif prediction == 3:
+            st.error("🚨 **Class 3: Severe CAD**\n\nHigh probability of severe vessel narrowing.")
+            color = "red"
+        elif prediction == 4:
+            st.error("💀 **Class 4: Critical Disease**\n\nExtreme risk. Immediate emergency intervention required.")
+            color = "darkred"
+
+    with res_col2:
+        # PLOTLY INTERACTIVE GAUGE
+        fig_gauge = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = danger_percentage,
+            title = {'text': "Clinical Risk Severity (%)"},
+            gauge = {
+                'axis': {'range': [None, 100]},
+                'bar': {'color': color},
+                'steps' : [
+                    {'range': [0, 25], 'color': "rgba(0, 255, 0, 0.1)"},
+                    {'range': [25, 50], 'color': "rgba(255, 255, 0, 0.2)"},
+                    {'range': [50, 75], 'color': "rgba(255, 165, 0, 0.2)"},
+                    {'range': [75, 100], 'color': "rgba(255, 0, 0, 0.2)"}],
+            }))
+        fig_gauge.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=10))
+        st.plotly_chart(fig_gauge, use_container_width=True)
+
+    # --- BOTTOM ROW: RADAR & PROBABILITY ---
+    st.divider()
+    chart_col1, chart_col2 = st.columns(2)
+
+    with chart_col1:
+        st.subheader("🕸️ Patient Vitals Radar")
+        # Normalize data roughly so it fits on a clean radar chart 0-100 scale
+        categories = ['Blood Pressure', 'Cholesterol', 'Max HR', 'ST Depression']
+        fig_radar = go.Figure()
+        fig_radar.add_trace(go.Scatterpolar(
+              r=[trestbps/2, chol/3, thalch/2, oldpeak*25],
+              theta=categories,
+              fill='toself',
+              name='Patient Profile',
+              line_color=color
+        ))
+        fig_radar.update_layout(
+          polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+          showlegend=False,
+          height=350, margin=dict(l=30, r=30, t=30, b=30)
+        )
+        st.plotly_chart(fig_radar, use_container_width=True)
+
+    with chart_col2:
+        st.subheader("📊 AI Confidence Breakdown")
+        # Plotly Interactive Bar Chart
+        prob_df = pd.DataFrame({
+            'Class': ['0 (Healthy)', '1 (Mild)', '2 (Moderate)', '3 (Severe)', '4 (Critical)'],
+            'Probability (%)': probabilities * 100
+        })
+        fig_bar = px.bar(prob_df, x='Class', y='Probability (%)', color='Class',
+                         color_discrete_sequence=['green', 'lightgreen', 'orange', 'red', 'darkred'])
+        fig_bar.update_layout(height=350, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
+        st.plotly_chart(fig_bar, use_container_width=True)
 
 # --- MEDICAL GLOSSARY ---
 st.divider()
