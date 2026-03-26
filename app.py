@@ -14,7 +14,7 @@ def load_model():
 model = load_model()
 
 # Header
-st.title("🫀 OMNIBRAIN: Multi-Class Heart Risk AI")
+st.title("OMNIBRAIN: Multi-Class Heart Risk AI")
 st.markdown("**Team 16** | Advanced severity detection of Coronary Artery Disease.")
 st.divider()
 
@@ -43,7 +43,7 @@ with col2:
 st.divider()
 
 # --- VISUAL DASHBOARD ---
-st.subheader("📊 Vitals vs. Healthy Baselines")
+st.subheader("Vitals vs. Healthy Baselines")
 met1, met2, met3 = st.columns(3)
 met1.metric(label="Cholesterol", value=f"{chol} mg/dl", delta=f"{chol - 200} from baseline", delta_color="inverse")
 met2.metric(label="Resting BP", value=f"{trestbps} mmHg", delta=f"{trestbps - 120} from baseline", delta_color="inverse")
@@ -99,7 +99,7 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
 
     # 3. PATIENT RADAR CHART
     st.divider()
-    st.subheader("🕸️ Patient Vitals Radar")
+    st.subheader("Patient Vitals Radar")
     st.write("A 360-degree view of how the patient's vitals map out. (Larger area = higher severity flags).")
     categories = ['Blood Pressure', 'Cholesterol', 'Max HR', 'ST Depression']
     fig_radar = go.Figure()
@@ -119,7 +119,7 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
 
     # 4. PROBABILITY BAR CHART
     st.divider()
-    st.subheader("📊 AI Confidence Breakdown")
+    st.subheader("AI Confidence Breakdown")
     st.write("This chart displays the model's calculated mathematical probability for each severity level.")
     prob_df = pd.DataFrame({
         'Class': ['Class 0', 'Class 1', 'Class 2', 'Class 3', 'Class 4'],
@@ -132,7 +132,7 @@ if st.button("Analyze Patient Severity", type="primary", use_container_width=Tru
 
 # --- MEDICAL GLOSSARY ---
 st.divider()
-with st.expander("ℹ️ Clinical Terminology Reference"):
+with st.expander("Clinical Terminology Reference"):
     st.markdown("""
     * **Thallium Scan (thal):** A nuclear stress test. 'Reversable defect' indicates blood flow completely stops during exercise.
     * **Fluoroscopy (ca):** The number of major coronary arteries (0-3) showing severe blockages under X-ray dye.
