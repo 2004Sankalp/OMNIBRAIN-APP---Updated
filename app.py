@@ -14,7 +14,7 @@ def load_model():
 model = load_model()
 
 # Header
-st.title("OMNIBRAIN: Multi-Class Heart Risk AI")
+st.title("Multi-Class Heart Risk AI")
 st.markdown("**Team 16** | Advanced severity detection of Coronary Artery Disease.")
 st.divider()
 
